@@ -1,10 +1,9 @@
-
-
+import java.util.Arrays;
 
 public class Field {
     private int SIZE = 10;
     private Cell field[][] = new Cell[SIZE][SIZE];
-
+    private String NAME;
 
     public Field() {
         for (int i = 0; i < field.length; i++) {
@@ -16,8 +15,16 @@ public class Field {
 
     }
 
+    public void setNAME(String NAME) {
+        this.NAME = NAME;
+    }
+
+    public String getNAME() {
+        return NAME;
+    }
+
     public void setShip(int x, int y, int decks, int direction) {
-        if (noShips(x, y, decks, direction)) {
+        if (true) {
             if (direction == 1) {
                 if (x >= 0 & x < field.length) {
                     for (int i = 0; i < decks; i++) {
@@ -44,32 +51,21 @@ public class Field {
 
     private boolean noShips(int x, int y, int decks, int direction) {
         if (direction == 1) {
-            if ((x <= 0 || x >= field.length - 2) & noShipsV(x, y, decks)) {
-                return true;
-            }
-            if (!noShipsV(x, y, decks)) {
-                return false;
-            }
+            return noShipsV(x, y, decks);
         } else {
-            if ((y <= 0 || y >= field.length - 2) & noShipsG(x, y, decks)) {
-                return true;
-            }
-            if (!noShipsG(x, y, decks)) {
-                return false;
-            }
+            return noShipsG(x, y, decks);
         }
-        return true;
     }
 
     private boolean noShipsG(int x, int y, int decks) {
-        if (y <= 0 || field[x][y - 1] == Cell.DECK || field[x - 1][y - 1] == Cell.DECK || field[x + 1][y - 1] == Cell.DECK) {
+        if (y <= 0 || (x == 0 || field[x][y - 1] != Cell.SEA) || field[x - 1][y - 1] != Cell.SEA || field[x + 1][y - 1] != Cell.SEA) {
             return false;
         }
-        if (y >= field.length - 2 || field[x][y + decks] == Cell.DECK || field[x - 1][y + decks] == Cell.DECK || field[x + 1][y + decks] == Cell.DECK) {
+        if (y >= field.length - 2 || field[x][y + decks] != Cell.SEA || field[x - 1][y + decks] != Cell.SEA || field[x + 1][y + decks] != Cell.SEA) {
             return false;
         }
         for (int i = 0; i < decks; i++) {
-            if (field[x + 1][y] == Cell.DECK || field[x - 1][y] == Cell.DECK) {
+            if (field[x + 1][y] != Cell.SEA || field[x - 1][y] != Cell.SEA) {
                 return false;
             }
             y++;
@@ -135,7 +131,14 @@ public class Field {
             case DECK:
                 field[x][y] = Cell.HIT;
                 if (isDead(x, y)) {
-                    System.out.println("DEATH");
+                    deathV(x, y, 1);
+                    deathV(x, y, -1);
+                    deathG(x, y, 1);
+                    deathG(x, y, -1);
+                    if (loseCheck()) {
+                        System.out.println("Поздравляю, " + NAME + " победил!");
+                    }
+                    ;
                 }
                 break;
             case MISS:
@@ -157,14 +160,14 @@ public class Field {
     }
 
     public boolean isDead(int x, int y) {
-        return (isDeadG(x, y, 1) & isDeadG(x, y, -1)) || (isDeadV(x, y, 1) & isDeadV(x, y, -1));
+        return (isDeadG(x, y, 1) & isDeadG(x, y, -1)) & (isDeadV(x, y, 1) & isDeadV(x, y, -1));
     }
 
     private boolean isDeadV(int x, int y, int direction) {
-        if (y < 0 || y >= field.length || (field[x][y] == Cell.SEA || field[x][y] == Cell.MISS)) {
+        if (y < 0 || y >= field.length || (field[x][y].equals(Cell.SEA) || field[x][y].equals(Cell.MISS))) {
             return true;
         }
-        if (field[x][y] == Cell.HIT) {
+        if (field[x][y].equals(Cell.HIT)) {
             return isDeadV(x, y + direction, direction);
         }
         return false;
@@ -172,34 +175,38 @@ public class Field {
 
 
     private boolean isDeadG(int x, int y, int direction) {
-        if (x < 0 || x >= field.length || (field[x][y] == Cell.SEA || field[x][y] == Cell.MISS)) {
+        if (x < 0 || x >= field.length || (field[x][y].equals(Cell.SEA) || field[x][y].equals(Cell.MISS))) {
             return true;
         }
-        if (field[x][y] == Cell.HIT) {
+        if (field[x][y].equals(Cell.HIT)) {
             return isDeadG(x + direction, y, direction);
         }
         return false;
     }
 
-    private void death(int x, int y) {
-        while (field[x][y] == Cell.HIT) {
+    private void deathV(int x, int y, int direction) {
+        if (field[x][y].equals(Cell.HIT) || field[x][y].equals(Cell.DEAD)) {
             field[x][y] = Cell.DEAD;
-            x++;
+            if (x > 0 & x <= field.length - 1) {
+                deathV(x + direction, y, direction);
+            }
         }
-        while (field[x][y] == Cell.HIT || field[x][y] == Cell.DEAD) {
-            field[x][y] = Cell.DEAD;
-            x--;
-        }
-        while (field[x][y] == Cell.HIT) {
-            field[x][y] = Cell.DEAD;
-            y++;
-        }
-        while (field[x][y] == Cell.HIT || field[x][y] == Cell.DEAD) {
-            field[x][y] = Cell.DEAD;
-            y--;
-        }
+    }
 
+    private void deathG(int x, int y, int direction) {
+        if (field[x][y].equals(Cell.HIT) || field[x][y].equals(Cell.DEAD)) {
+            field[x][y] = Cell.DEAD;
+            if (y > 0 & y <= field.length - 1) {
+                deathG(x, y + direction, direction);
+            }
+        }
+    }
 
+    private boolean loseCheck() {
+        if (Arrays.stream(field).anyMatch(Cell.DECK)) {
+            return false;
+        }
+        return true;
     }
 
 
