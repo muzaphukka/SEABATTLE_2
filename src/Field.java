@@ -1,9 +1,13 @@
 import java.util.Arrays;
+import java.util.Stack;
+import java.util.Scanner;
 
 public class Field {
     private int SIZE = 10;
     private Cell field[][] = new Cell[SIZE][SIZE];
     private String NAME;
+
+    public Scanner in = new Scanner(System.in);
 
     public Field() {
         for (int i = 0; i < field.length; i++) {
@@ -23,8 +27,8 @@ public class Field {
         return NAME;
     }
 
-    public void setShip(int x, int y, int decks, int direction) {
-        if (true) {
+    private void setShip(int x, int y, int decks, int direction) {
+        if (noShips(x, y, decks, direction)) {
             if (direction == 1) {
                 if (x >= 0 & x < field.length) {
                     for (int i = 0; i < decks; i++) {
@@ -48,6 +52,29 @@ public class Field {
             System.out.println("Невозможно разместить, мешают другие корабли.");
         }
     }
+
+    public void setShips() {
+        Stack<Integer> fleet = new Stack<>();
+        //  fleet.push(1);
+        //  fleet.push(1);
+        //  fleet.push(1);
+        //  fleet.push(1);
+        //  fleet.push(2);
+        //  fleet.push(2);
+        //  fleet.push(2);
+        fleet.push(3);
+        //    fleet.push(3);
+        // fleet.push(4);
+        for (int i = 0; i < fleet.capacity(); i++) {
+            if (fleet.isEmpty()) {
+                break;
+            }
+            setShip(in.nextInt(), in.nextInt(), fleet.pop(), in.nextInt());
+            print();
+        }
+
+    }
+
 
     private boolean noShips(int x, int y, int decks, int direction) {
         if (direction == 1) {
@@ -123,13 +150,49 @@ public class Field {
 
     }
 
-    public void shot(int x, int y) {
+    public void printBlind() {
+        System.out.print(" ");
+        for (int i = 0; i < SIZE; i++) {
+            System.out.print("  " + i);
+        }
+        System.out.println();
+        for (int w = 0; w < field.length; w++) {
+            System.out.print(w + " ");
+            for (int h = 0; h < field.length; h++) {
+                switch (this.field[w][h]) {
+                    case SEA:
+                        System.out.print("|~~");
+                        break;
+                    case DECK:
+                        System.out.print("|~~");
+                        break;
+                    case HIT:
+                        System.out.print("|))");
+                        break;
+                    case MISS:
+                        System.out.print("|><");
+                        break;
+                    case DEAD:
+                        System.out.print("|@@");
+                        break;
+                }
+
+            }
+            System.out.print("|");
+            System.out.println();
+        }
+
+    }
+
+    public void shot(int y, int x) {
         switch (this.field[x][y]) {
             case SEA:
                 field[x][y] = Cell.MISS;
                 break;
             case DECK:
                 field[x][y] = Cell.HIT;
+                System.out.println("Поле игрока " + getNAME());
+                printBlind();
                 if (isDead(x, y)) {
                     deathV(x, y, 1);
                     deathV(x, y, -1);
@@ -137,10 +200,16 @@ public class Field {
                     deathG(x, y, -1);
                     if (loseCheck()) {
                         System.out.println("Поздравляю, " + NAME + " победил!");
+                        print();
                     }
-                    ;
+                    shot(in.nextInt(), in.nextInt());
+                    System.out.println("Поле игрока " + getNAME());
+                    printBlind();
+
                 }
-                break;
+                shot(in.nextInt(), in.nextInt());
+                System.out.println("Поле игрока " + getNAME());
+                printBlind();
             case MISS:
                 System.out.println("Упс, сюда уже стреляли, попробуйте снова!");
                 //  shot(x,y);
